@@ -55,6 +55,8 @@
     when.className = "when";
     var start = day(trip.s), end = day(trip.e);
     when.textContent = end && end !== start ? start + " – " + end : start;
+    var every = { daily: "day", weekly: "week", monthly: "month", yearly: "year" }[trip.r];
+    if (every) when.textContent += " \u00b7 Every " + every;
     item.appendChild(name);
     item.appendChild(when);
     list.appendChild(item);
