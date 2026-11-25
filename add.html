@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="style.css"><title>Trips shared with you - Nextaway</title>
+<meta name="robots" content="noindex">
+<style>
+.trips { list-style: none; padding: 0; margin: 0 0 28px; }
+.trips li { padding: 14px 16px; margin: 0 0 10px; border-radius: 14px; background: rgba(120,120,128,.14); }
+.trips .name { font-weight: 600; }
+.trips .when { color: #6e6e73; font-size: 15px; }
+.btn { display: block; text-align: center; text-decoration: none; font-weight: 600; padding: 14px 18px; border-radius: 14px; margin: 0 0 12px; }
+.btn.main { background: #0a66d8; color: #fff; }
+.btn.other { background: rgba(120,120,128,.18); }
+.small { color: #6e6e73; font-size: 15px; }
+@media (prefers-color-scheme: dark) { .trips .when, .small { color: #98989f; } }
+</style></head><body>
+<nav><a href="./">Nextaway</a><a href="privacy.html">Privacy</a><a href="support.html">Support</a></nav>
+<h1 id="title">Trips shared with you</h1>
+<p class="sub" id="sub">Add them to your countdowns in Nextaway.</p>
+<ul class="trips" id="trips"></ul>
+<div id="actions" hidden>
+<a class="btn main" id="add" href="#">Add to Nextaway</a>
+<a class="btn other" href="https://apps.apple.com/app/id6838543561">Get Nextaway on the App Store</a>
+<p class="small">Don't have Nextaway yet? Get it from the App Store (it's free), then open this link again and tap Add to Nextaway.</p>
+<p class="small">The trips are held in the link itself. They are not stored on this website.</p>
+</div>
+<script>
+(function () {
+  var payload = location.hash.replace(/^#/, "");
+  var title = document.getElementById("title");
+  var sub = document.getElementById("sub");
+  function fail() {
+    title.textContent = "This link has no trips in it";
+    sub.textContent = "Ask the sender to share the trips again from Nextaway.";
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(payload)) { fail(); return; }
+  var packet;
+  try {
+    var b64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    var bytes = Uint8Array.from(atob(b64), function (c) { return c.charCodeAt(0); });
+    packet = JSON.parse(new TextDecoder().decode(bytes));
+  } catch (e) { fail(); return; }
+  var trips = packet && Array.isArray(packet.trips) ? packet.trips : [];
+  if (!trips.length) { fail(); return; }
+  function day(text) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(text || "");
+    if (!m) return "";
+    return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+  var list = document.getElementById("trips");
+  trips.forEach(function (trip) {
+    var item = document.createElement("li");
+    var name = document.createElement("div");
+    name.className = "name";
+    name.textContent = String(trip.n || "Trip");
+    var when = document.createElement("div");
+    when.className = "when";
+    var start = day(trip.s), end = day(trip.e);
+    when.textContent = end && end !== start ? start + " – " + end : start;
+    item.appendChild(name);
+    item.appendChild(when);
+    list.appendChild(item);
+  });
+  title.textContent = trips.length === 1 ? "A trip shared with you" : trips.length + " trips shared with you";
+  sub.textContent = trips.length === 1 ? "Add it to your countdowns in Nextaway." : "Add them to your countdowns in Nextaway.";
+  document.getElementById("add").href = "tripcountdown://add?d=" + payload;
+  document.getElementById("actions").hidden = false;
+})();
+</script>
+</body></html>
